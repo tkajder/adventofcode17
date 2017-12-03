@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"flag"
 	"fmt"
@@ -10,50 +9,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/tkajder/adventofcode17/fileutils"
 	"github.com/tkajder/adventofcode17/sliceutils"
 )
 
-func calculateFileChecksum(filename string) (uint64, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return 0, err
-	}
-	defer file.Close()
-
-	var checksum uint64
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		difference, err := computeDifference(scanner.Text())
-		if err != nil {
-			return 0, err
-		}
-		checksum += difference
-	}
-
-	if err := scanner.Err(); err != nil {
-		return 0, err
-	}
-
-	return checksum, nil
-}
-
-func computeDifference(line string) (uint64, error) {
-	strNums := strings.Split(line, "\t")
-	nums, err := sliceutils.Atoui64(strNums)
-	if err != nil {
-		return 0, err
-	}
-
-	difference, err := minMaxDifference(nums)
-	if err != nil {
-		return 0, err
-	}
-
-	return difference, nil
-}
-
-func minMaxDifference(nums []uint64) (uint64, error) {
+func largestDifference(nums []uint64) (uint64, error) {
 	if len(nums) == 0 {
 		return 0, errors.New("Cannot calculate difference on empty slice")
 	}
@@ -73,6 +33,18 @@ func minMaxDifference(nums []uint64) (uint64, error) {
 	return max - min, nil
 }
 
+func divisibleNumsSum(nums []uint64) (uint64, error) {
+	for i := 0; i < len(nums); i++ {
+		for j := 0; j < len(nums); j++ {
+			if nums[i] < nums[j] && nums[j]%nums[i] == 0 {
+				return nums[j] / nums[i], nil
+			}
+		}
+	}
+
+	return 0, errors.New("No divisible numbers found")
+}
+
 func main() {
 	fileNamePtr := flag.String("file", "", "Required: file containing inverse captcha")
 	flag.Parse()
@@ -83,9 +55,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	checksum, err := calculateFileChecksum(*fileNamePtr)
-	if err != nil {
+	lines, errc := fileutils.ByLine(*fileNamePtr)
+
+	var (
+		diffChecksum uint64
+		divChecksum  uint64
+	)
+
+	for line := range lines {
+		nums, err := sliceutils.Atoui64(strings.Split(line, "\t"))
+
+		diff, err := largestDifference(nums)
+		if err != nil {
+			log.Fatal(err)
+		}
+		diffChecksum += diff
+
+		div, err := divisibleNumsSum(nums)
+		if err != nil {
+			log.Fatal(err)
+		}
+		divChecksum += div
+	}
+	if err := <-errc; err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(checksum)
+
+	fmt.Println(diffChecksum, divChecksum)
 }
