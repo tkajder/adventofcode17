@@ -17,6 +17,19 @@ type Point struct {
 	y int64
 }
 
+type ValuedPoint struct {
+	point Point
+	value uint64
+}
+
+func (p *Point) isAdjacent(other *Point) (bool, error) {
+	if other == nil {
+		return false, errors.New("Cannot be adjacent to nil Point")
+	}
+
+	return (p.x-other.x >= -1 && p.x-other.x <= 1) && (p.y-other.y >= -1 && p.y-other.y <= 1), nil
+}
+
 func pointFromSpiralCoordinate(coordinate uint64) (Point, error) {
 	if coordinate == 0 {
 		return Point{}, errors.New("Spiral coordinate 0 is invalid, coordinates are 0-based")
@@ -61,6 +74,39 @@ func manhattanDistance(p1 Point, p2 Point) uint64 {
 	return distanceX + distanceY
 }
 
+func firstGreaterCoordinate(value uint64) (uint64, error) {
+	if value == 0 {
+		return 1, nil
+	}
+
+	points := []ValuedPoint{ValuedPoint{Point{0, 0}, 1}}
+
+	var coordinate uint64
+	for coordinate = 2; ; coordinate++ {
+		point, err := pointFromSpiralCoordinate(coordinate)
+		if err != nil {
+			return 0, err
+		}
+
+		var pointValue uint64
+		for _, prevPoint := range points {
+			adjacent, err := point.isAdjacent(&prevPoint.point)
+			if err != nil {
+				return 0, err
+			}
+			if adjacent {
+				pointValue += prevPoint.value
+			}
+		}
+
+		if pointValue > value {
+			return pointValue, nil
+		}
+
+		points = append(points, ValuedPoint{point, pointValue})
+	}
+}
+
 func main() {
 	fileNamePtr := flag.String("file", "", "Required: file containing inverse captcha")
 	flag.Parse()
@@ -89,4 +135,10 @@ func main() {
 
 	distance := manhattanDistance(point, Point{0, 0})
 	fmt.Println(distance)
+
+	value, err := firstGreaterCoordinate(uint64(coordinate))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(value)
 }
