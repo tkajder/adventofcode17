@@ -23,6 +23,25 @@ func numJumpsToExit(jumps []int) uint {
 	return numJumps
 }
 
+func numJumpsToExitAlternative(jumps []int) uint {
+	var position int
+	var numJumps uint
+	jumpSize := len(jumps)
+
+	for ; position < jumpSize && position >= 0; numJumps++ {
+		jump := jumps[position]
+		if jump >= 3 {
+			jumps[position]--
+		} else {
+			jumps[position]++
+		}
+
+		position += jump
+	}
+
+	return numJumps
+}
+
 func main() {
 	fileNamePtr := flag.String("file", "", "Required: file containing inverse captcha")
 	flag.Parse()
@@ -48,6 +67,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Copy so they can both manipulate arrays
+	alternativeJumps := make([]int, len(jumps))
+	copy(alternativeJumps, jumps)
+
 	numJumps := numJumpsToExit(jumps)
 	fmt.Println(numJumps)
+
+	numAlternativeJumps := numJumpsToExitAlternative(alternativeJumps)
+	fmt.Println(numAlternativeJumps)
 }
