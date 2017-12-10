@@ -2,6 +2,7 @@ package fileutils
 
 import (
 	"bufio"
+	"io/ioutil"
 	"os"
 )
 
@@ -32,4 +33,13 @@ func ByLine(filename string) (<-chan string, <-chan error) {
 	}()
 
 	return lines, errc
+}
+
+func WholeFile(filename string) (string, error) {
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+
+	return string(bytes), nil
 }
