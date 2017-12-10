@@ -78,19 +78,23 @@ func main() {
 		memoryBanks[i] = uint(val)
 	}
 
-	allEqual := false
+	var index int
+	var loopSize int
+
 	cycles := [][]uint{memoryBanks}
-	for !allEqual {
+	for index == 0 {
 		next := balance(cycles[len(cycles)-1])
 
-		for _, prev := range cycles {
+		for i, prev := range cycles {
 			if arrEquals(prev, next) {
-				allEqual = true
+				index = len(cycles)
+				loopSize = index - i
 				break
 			}
 		}
 
 		cycles = append(cycles, next)
 	}
-	fmt.Println(len(cycles) - 1)
+	fmt.Println(index)
+	fmt.Println(loopSize)
 }
