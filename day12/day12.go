@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// Setup graph and int->node map
-	g := graph.New(graph.Directed)
+	g := graph.New(graph.Undirected)
 	nodes := make(map[int]graph.Node)
 
 	// Read file into graph
@@ -77,26 +77,24 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Invert the map so we can lookup by node on our dijkstra search
+	// Invert the map so we can lookup by node instead of id
 	names := make(map[graph.Node]int)
 	for k, v := range nodes {
 		names[v] = k
 	}
 
-	// Put connected edges into the map
-	connected := map[int]bool{0: true}
-	paths := g.DijkstraSearch(nodes[0])
-	for _, path := range paths {
-		pathLen := len(path.Path)
+	// Get the connected components of the graph
+	components := g.StronglyConnectedComponents()
+	for _, component := range components {
 
-		// skip unconnected edges
-		if pathLen == 0 {
-			continue
+		// Print component size if it contains 0
+		for _, node := range component {
+			if names[node] == 0 {
+				fmt.Println(len(component))
+				break
+			}
 		}
-
-		dst := path.Path[pathLen-1].End
-		connected[names[dst]] = true
 	}
 
-	fmt.Println(len(connected))
+	fmt.Println(len(components))
 }
