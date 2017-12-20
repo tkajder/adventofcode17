@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/tkajder/adventofcode17/day10/knothash"
-
 	"github.com/tkajder/adventofcode17/fileutils"
 )
 
@@ -26,8 +25,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	bytes := []byte(fulltext)
-	kh := knothash.New()
-	hash := kh.Hash(bytes)
+	// Compute hash
+	p := []byte(fulltext)
+	hash := knothash.Hash(p)
 	fmt.Println(hash)
 }

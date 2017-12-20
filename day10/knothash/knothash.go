@@ -1,18 +1,21 @@
 package knothash
 
-import (
-	"encoding/hex"
-)
+import "encoding/hex"
 
-type KnotHash struct {
+type knotHash struct {
 	data     [256]byte
 	currPos  byte
 	skipSize uint
 }
 
-func New() *KnotHash {
-	// Knot hash always operates on an array of size byte
-	data := [256]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+func new() *knotHash {
+	kh := &knotHash{}
+	kh.reset()
+	return kh
+}
+
+func (kh *knotHash) reset() {
+	kh.data = [256]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 		11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
 		21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
 		31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
@@ -39,10 +42,11 @@ func New() *KnotHash {
 		241, 242, 243, 244, 245, 246, 247, 248, 249, 250,
 		251, 252, 253, 254, 255}
 
-	return &KnotHash{data: data, currPos: 0, skipSize: 0}
+	kh.currPos = 0
+	kh.skipSize = 0
 }
 
-func (kh *KnotHash) knot(length byte) {
+func (kh *knotHash) knot(length byte) {
 	// Find start and end of length with overflow
 	lengthStart := kh.currPos
 	lengthEnd := lengthStart + length
@@ -66,11 +70,12 @@ func (kh *KnotHash) knot(length byte) {
 	kh.skipSize++
 }
 
-func (kh *KnotHash) Hash(bytes []byte) string {
+func (kh *knotHash) Hash(p []byte) string {
 	suffix := getBytesSuffix()
 
+	// Compute 64 rounds of knotting on input and suffix
 	for round := 0; round < 64; round++ {
-		for _, b := range bytes {
+		for _, b := range p {
 			kh.knot(b)
 		}
 
@@ -79,11 +84,16 @@ func (kh *KnotHash) Hash(bytes []byte) string {
 		}
 	}
 
+	// Calculate dense hashes from sparse hash
 	denseHashes := kh.calculateDenseHashes()
+
+	// reset after hash
+	kh.reset()
+
 	return hex.EncodeToString(denseHashes)
 }
 
-func (kh *KnotHash) calculateDenseHashes() []byte {
+func (kh *knotHash) calculateDenseHashes() []byte {
 	denseHashes := make([]byte, 16)
 
 	for block := 0; block < 16; block++ {
