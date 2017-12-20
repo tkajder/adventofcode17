@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/tkajder/adventofcode17/day10/knothash"
 
@@ -28,17 +26,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	bytes := []byte(fulltext)
 	kh := knothash.New()
-
-	// Knot the knothash with each length
-	for _, lengthStr := range strings.Split(strings.Trim(fulltext, " \t\r\n"), ",") {
-		length, err := strconv.Atoi(lengthStr)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		kh.Knot(length)
-	}
-
-	fmt.Println(kh.Hash())
+	hash := kh.Hash(bytes)
+	fmt.Println(hash)
 }
